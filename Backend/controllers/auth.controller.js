@@ -1,3 +1,4 @@
+import { generateTokenAndSetCookie } from "../lib/utils/generateToken.js";
 import User from "../models/user.model.js";
 import bcrypt from "bcryptjs";
 
@@ -38,7 +39,7 @@ export const signup = async (req, res) => {
     });
 
     if(newUser){
-        generateTokenAndSetCookie(newUser._id , res); // to generate a token and set a cookie(to create)
+        generateTokenAndSetCookie(newUser._id , res); // to generate a token and set a cookie
         
 
         // Saving the new user to the database
