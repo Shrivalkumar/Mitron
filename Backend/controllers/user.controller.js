@@ -117,7 +117,7 @@ export const updateUser = async (req, res) => {
   const userId = req.user._id;
 
   try {
-    const user = User.findById(userId);
+    let user = await User.findById(userId); //we have to use let becuase we are changing the user object
     if (!user) {
       return res.status(404).json({ error: "User not found" });
     }
@@ -154,12 +154,26 @@ export const updateUser = async (req, res) => {
 
     // updating the user profile Image
     if (profileImg) {
+      //if user already has a profile image we are removing the old one  from the cloudinary
+      if (user.profileImg) {
+        await cloudinary.uploader.destroy(
+          user.profileImg.split("/").pop().split(".")[0]
+        ); //removing the id of the old image from the url saved in the cloudinary
+      }
+
       const uploadedResponse = await cloudinary.uploader.upload(profileImg);
       profileImg = uploadedResponse.secure_url;
     }
 
     // updating the user cover image
     if (coverImg) {
+      //if user already has a cover image we are removing the old one  from the cloudinary
+      if (user.coverImg) {
+        await cloudinary.uploader.destroy(
+          user.coverImg.split("/").pop().split(".")[0]
+        );
+      }
+
       const uploadedResponse = await cloudinary.uploader.upload(coverImg);
       coverImg = uploadedResponse.secure_url;
     }
@@ -173,11 +187,14 @@ export const updateUser = async (req, res) => {
     user.profileImg = profileImg || user.profileImg;
     user.coverImg = coverImg || user.coverImg;
 
-    //saving the user in the database 
+    //saving the user in the database
     user = await user.save();
 
-    user.password= null; // the password is removed from the user object
+    user.password = null; // the password is removed from the user object
 
     return res.status(200).json(user);
-  } catch (error) {}
+  } catch (error) {
+    console.log("Error in updateUser" + error);
+    return res.status(500).json({ error: error.message });
+  }
 };
